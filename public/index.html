@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WCAG Accessibility Checker — Free Website ADA Compliance Scanner</title>
+  <meta name="description" content="Check any website for WCAG 2.1 AA accessibility compliance. Get a detailed report with severity levels, fix suggestions, and an overall score.">
+
+  <!-- OG / Social -->
+  <meta property="og:title" content="WCAG Accessibility Checker">
+  <meta property="og:description" content="Free WCAG 2.1 AA compliance scanner. Enter any URL and get a detailed accessibility report with fix suggestions.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WCAG Accessibility Checker">
+  <meta name="twitter:description" content="Free WCAG 2.1 AA compliance scanner with detailed reports.">
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- ── Hero / Input View ─────────────────────────────── -->
+  <section id="hero" class="hero">
+    <div class="hero-content">
+      <div class="hero-logo">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v5"/><path d="M8 21l2.5-7h3L16 21"/><path d="M6 12h12"/></svg>
+      </div>
+      <h1>WCAG Accessibility Checker</h1>
+      <p class="hero-subtitle">Check any website for WCAG 2.1 AA compliance. Get a detailed report with actionable fix suggestions.</p>
+      <form id="scan-form" class="scan-form">
+        <div class="input-group">
+          <input type="text" id="url-input" placeholder="Enter website URL (e.g., example.com)" autocomplete="url" required>
+          <button type="submit" id="scan-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Scan</span>
+          </button>
+        </div>
+        <p id="form-error" class="form-error" hidden></p>
+      </form>
+      <div class="features">
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          <span>WCAG 2.1 AA</span>
+        </div>
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4m-7-7H1m22 0h-4m-2.3-5.7l2.8-2.8M4.5 19.5l2.8-2.8m0-9.4L4.5 4.5m15 15l-2.8-2.8"/></svg>
+          <span>ADA Compliance</span>
+        </div>
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Detailed Report</span>
+        </div>
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Free &amp; Private</span>
+        </div>
+      </div>
+
+      <!-- Recent scans -->
+      <div id="history-section" class="history-section" hidden>
+        <h3>Recent Scans</h3>
+        <div id="history-list" class="history-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Loading View ──────────────────────────────────── -->
+  <section id="loading" class="loading">
+    <div class="loading-content">
+      <div class="progress-ring-wrap">
+        <svg class="progress-ring" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="8"/>
+          <circle id="progress-arc" cx="60" cy="60" r="54" fill="none" stroke="#fff" stroke-width="8"
+            stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round"
+            transform="rotate(-90 60 60)"/>
+        </svg>
+        <div class="progress-percent" id="progress-percent">0%</div>
+      </div>
+      <p id="loading-text" class="loading-text">Loading page...</p>
+      <p class="loading-url" id="loading-url"></p>
+      <button id="cancel-btn" class="cancel-btn">Cancel</button>
+    </div>
+  </section>
+
+  <!-- ── Results View ──────────────────────────────────── -->
+  <section id="results" class="results">
+    <!-- Top bar -->
+    <div class="results-topbar">
+      <div class="topbar-left">
+        <button id="back-btn" class="back-btn" title="Back to home">&larr;</button>
+        <form id="topbar-scan-form" class="topbar-scan-form">
+          <input type="text" id="topbar-url-input" placeholder="Scan another URL..." class="topbar-url-input">
+          <button type="submit" class="topbar-scan-btn">Scan</button>
+        </form>
+      </div>
+      <div class="topbar-right">
+        <span class="scan-time" id="scan-time"></span>
+        <button id="download-btn" class="topbar-action-btn" title="Download report">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Report</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Score + Summary -->
+    <div class="results-header" id="results-header">
+      <div class="score-section">
+        <div class="screenshot-wrap" id="screenshot-wrap"></div>
+        <div class="score-wrap">
+          <div class="score-circle" id="score-circle">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" fill="none" stroke="#e0e0e0" stroke-width="10"/>
+              <circle id="score-ring" cx="60" cy="60" r="54" fill="none" stroke="#4caf50" stroke-width="10"
+                stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round"
+                transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="score-value" id="score-value">0</div>
+            <div class="score-label">/ 100</div>
+          </div>
+          <div class="score-grade" id="score-grade"></div>
+        </div>
+        <div class="scanned-info">
+          <div class="scanned-url" id="scanned-url"></div>
+          <div class="scanned-date" id="scanned-date"></div>
+        </div>
+      </div>
+
+      <!-- Summary chips -->
+      <div class="summary-chips" id="summary-chips"></div>
+    </div>
+
+    <!-- Toolbar: filters + view toggle + expand/collapse -->
+    <div class="toolbar" id="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-group" id="severity-filters"></div>
+        <div class="filter-group" id="category-filters"></div>
+      </div>
+      <div class="toolbar-right">
+        <button id="view-toggle" class="tool-btn" title="Toggle grouped view">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span>Group</span>
+        </button>
+        <button id="expand-all-btn" class="tool-btn" title="Expand or collapse all issues">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          <span>Expand All</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Issues list -->
+    <div class="issues-list" id="issues-list"></div>
+
+    <!-- Footer -->
+    <div class="results-footer">
+      <p>Automated WCAG 2.1 AA scan &middot; Manual review is always recommended for full compliance.</p>
+    </div>
+  </section>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
