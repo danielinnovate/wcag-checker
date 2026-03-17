@@ -251,13 +251,70 @@
     urlInput.focus();
   });
 
-  // ── Download report ───────────────────────────────
+  // ── Download report as colored Excel ─────────────
+  const SEV_BG = { critical: "#fecaca", serious: "#fed7aa", moderate: "#fef08a", minor: "#bfdbfe" };
+  const SEV_FG = { critical: "#991b1b", serious: "#9a3412", moderate: "#854d0e", minor: "#1e40af" };
+
   downloadBtn.addEventListener("click", () => {
     if (!currentData) return;
-    // Expand all cards for print, then print
-    resultsEl.querySelectorAll(".issue-card").forEach((c) => c.classList.add("expanded"));
-    window.print();
+    const headers = ["Severity", "Category", "WCAG Criteria", "Description", "Help", "Element HTML", "Selector", "Fix Suggestion"];
+
+    let tableHTML = `<table>
+      <tr>${headers.map((h) => `<th style="background:#0d9488;color:#fff;font-weight:bold;padding:6px 10px;border:1px solid #ccc;">${esc(h)}</th>`).join("")}</tr>`;
+
+    (currentData.issues || []).forEach((issue) => {
+      const wcag = (issue.wcag || []).join("; ");
+      const bg = SEV_BG[issue.severity] || "#fff";
+      const fg = SEV_FG[issue.severity] || "#000";
+      const sevStyle = `background:${bg};color:${fg};font-weight:bold;`;
+      const rowStyle = `border:1px solid #ddd;padding:4px 8px;vertical-align:top;`;
+
+      const makeRow = (node) => {
+        return `<tr>
+          <td style="${sevStyle}${rowStyle}">${esc(issue.severity)}</td>
+          <td style="${rowStyle}">${esc(issue.category)}</td>
+          <td style="${rowStyle}">${esc(wcag)}</td>
+          <td style="${rowStyle}">${esc(issue.description)}</td>
+          <td style="${rowStyle}">${esc(issue.help || "")}</td>
+          <td style="${rowStyle}font-family:monospace;font-size:11px;">${esc(node ? node.html || "" : "")}</td>
+          <td style="${rowStyle}font-family:monospace;font-size:11px;">${esc(node ? node.selector || "" : "")}</td>
+          <td style="${rowStyle}">${esc(node ? node.fix || "" : "")}</td>
+        </tr>`;
+      };
+
+      if (issue.nodes && issue.nodes.length > 0) {
+        issue.nodes.forEach((node) => { tableHTML += makeRow(node); });
+      } else {
+        tableHTML += makeRow(null);
+      }
+    });
+
+    // Summary row
+    const s = currentData.summary;
+    tableHTML += `<tr><td colspan="8" style="padding:10px;border:1px solid #ddd;font-weight:bold;background:#f0fdfa;">
+      Score: ${currentData.score}/100 &mdash; Critical: ${s.critical} | Serious: ${s.serious} | Moderate: ${s.moderate} | Minor: ${s.minor} | Passed: ${s.passes}
+    </td></tr>`;
+    tableHTML += "</table>";
+
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+      <x:Name>WCAG Report</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+      </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>
+      <body>${tableHTML}</body></html>`;
+
+    const blob = new Blob([html], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const host = new URL(currentData.url).hostname.replace(/\./g, "_");
+    a.href = url;
+    a.download = `wcag-report-${host}-${new Date().toISOString().slice(0, 10)}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
   });
+
+  function esc(str) {
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
 
   // ── View toggle (flat vs grouped) ─────────────────
   viewToggle.addEventListener("click", () => {
