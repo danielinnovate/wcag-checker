@@ -646,12 +646,12 @@
     // Pricing tier based on violation count
     let tier, price, tierDesc;
     if (total <= 15) {
-      tier = "Quick Fix";
-      price = "$499";
+      tier = "Starter";
+      price = "$1,500 USD";
       tierDesc = "Up to 15 violations";
     } else if (total <= 50) {
       tier = "Standard";
-      price = "$999";
+      price = "$2,500 USD";
       tierDesc = "Up to 50 violations";
     } else {
       tier = "Comprehensive";
