@@ -436,8 +436,70 @@
         <span class="chip-count">${summary.passes || 0}</span> Passed
       </div>`;
 
+    // CTA banner
+    const ctaWrap = document.createElement("div");
+    ctaWrap.innerHTML = getCTAHTML(data);
+    header.appendChild(ctaWrap);
+
+    // Wire up lead form
+    const leadForm = header.querySelector("#lead-form");
+    if (leadForm) {
+      leadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = leadForm.querySelector("button");
+        const nameVal = leadForm.querySelector("#lead-name").value.trim();
+        const emailVal = leadForm.querySelector("#lead-email").value.trim();
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+        try {
+          await fetch("/api/lead", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: nameVal,
+              email: emailVal,
+              website: data.url,
+              score: data.score,
+              issueCount: data.summary.total,
+            }),
+          });
+          leadForm.innerHTML = `<p class="cta-success">Thanks! We'll be in touch shortly.</p>`;
+        } catch (_) {
+          btn.disabled = false;
+          btn.textContent = "Get in touch";
+        }
+      });
+    }
+
     renderFilters(data);
     renderIssues(data);
+  }
+
+  function getCTAHTML(data) {
+    let headline, subtitle;
+    if (data.score < 50) {
+      headline = "Your site needs accessibility work";
+      subtitle = `With a score of ${data.score}/100 and ${data.summary.total} issues found, your site may be at risk of ADA compliance issues. We can fix everything for a flat fee.`;
+    } else if (data.score < 80) {
+      headline = "A few issues to address";
+      subtitle = `Your site scored ${data.score}/100 with ${data.summary.total} issues. Let us handle the fixes so you can focus on your business.`;
+    } else {
+      headline = "Looking good — want a manual review?";
+      subtitle = `Your site scored ${data.score}/100. Automated scans catch a lot, but a manual accessibility audit catches what tools miss.`;
+    }
+
+    return `
+      <div class="cta-banner">
+        <div class="cta-content">
+          <h3 class="cta-headline">${headline}</h3>
+          <p class="cta-subtitle">${subtitle}</p>
+        </div>
+        <form class="cta-form" id="lead-form">
+          <input type="text" id="lead-name" placeholder="Your name" class="cta-input" required>
+          <input type="email" id="lead-email" placeholder="Your email" class="cta-input" required>
+          <button type="submit" class="cta-btn">Get in touch</button>
+        </form>
+      </div>`;
   }
 
   // ── Filters ───────────────────────────────────────

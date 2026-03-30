@@ -121,6 +121,55 @@ app.post("/api/scan", rateLimit, async (req, res) => {
   }
 });
 
+// POST /api/lead — capture contact details
+const fs = require("fs");
+const LEADS_FILE = path.join(__dirname, "leads.json");
+
+app.post("/api/lead", (req, res) => {
+  const { name, email, website, score, issueCount } = req.body;
+
+  if (!email || !email.includes("@")) {
+    return res.status(400).json({ success: false, error: "Valid email is required." });
+  }
+
+  const lead = {
+    name: name || "",
+    email,
+    website: website || "",
+    score: score ?? null,
+    issueCount: issueCount ?? null,
+    date: new Date().toISOString(),
+  };
+
+  // Append to leads file
+  let leads = [];
+  try {
+    if (fs.existsSync(LEADS_FILE)) {
+      leads = JSON.parse(fs.readFileSync(LEADS_FILE, "utf8"));
+    }
+  } catch (_) {}
+  leads.push(lead);
+  fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+
+  console.log(`[LEAD] ${lead.name} <${lead.email}> — ${lead.website} — Score: ${lead.score}`);
+
+  res.json({ success: true });
+});
+
+// GET /api/leads — view all leads (basic auth)
+app.get("/api/leads", (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth || auth !== "Bearer wcag-admin-2024") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const leads = JSON.parse(fs.readFileSync(LEADS_FILE, "utf8"));
+    res.json(leads);
+  } catch (_) {
+    res.json([]);
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`WCAG Checker running at http://localhost:${PORT}`);
 });

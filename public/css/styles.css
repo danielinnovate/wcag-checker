@@ -806,6 +806,94 @@ body {
   font-weight: 500;
 }
 
+/* ── CTA Banner ──────────────────────────────────── */
+.cta-banner {
+  margin-top: 20px;
+  padding: 24px 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.cta-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cta-headline {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.cta-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.cta-form {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.cta-input {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  width: 160px;
+  transition: border-color var(--transition);
+}
+.cta-input:focus { border-color: var(--primary); }
+.cta-input::placeholder { color: #999; }
+
+.cta-btn {
+  padding: 10px 20px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition);
+}
+.cta-btn:hover { background: var(--primary-dark); }
+.cta-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cta-success {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .cta-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .cta-form {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cta-input { width: 100%; }
+}
+
 /* ── Print / Export ───────────────────────────────── */
 @media print {
   :root {
