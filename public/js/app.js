@@ -111,39 +111,40 @@
   }
 
   // ── Progress bar ──────────────────────────────────
-  const LOADING_STEPS = [
-    { pct: 15, text: "Loading page..." },
-    { pct: 35, text: "Waiting for resources..." },
-    { pct: 55, text: "Running accessibility checks..." },
-    { pct: 75, text: "Analyzing WCAG compliance..." },
-    { pct: 88, text: "Generating report..." },
+  const LOADING_TEXTS = [
+    { at: 10, text: "Loading page..." },
+    { at: 30, text: "Waiting for resources..." },
+    { at: 50, text: "Running accessibility checks..." },
+    { at: 70, text: "Analyzing WCAG compliance..." },
+    { at: 85, text: "Generating report..." },
   ];
 
   function startProgress() {
     progressValue = 0;
-    progressTarget = 0;
-    let stepIdx = 0;
     updateProgressUI(0);
-    loadingText.textContent = LOADING_STEPS[0].text;
-
-    loadingInterval = setInterval(() => {
-      stepIdx = Math.min(stepIdx + 1, LOADING_STEPS.length - 1);
-      progressTarget = LOADING_STEPS[stepIdx].pct;
-      loadingText.textContent = LOADING_STEPS[stepIdx].text;
-    }, 3000);
+    loadingText.textContent = LOADING_TEXTS[0].text;
+    let lastTextIdx = 0;
 
     function tick() {
-      if (progressValue < progressTarget) {
-        progressValue += 0.5;
-        updateProgressUI(progressValue);
+      // Continuously creep toward 95% — fast at first, slowing down
+      const remaining = 95 - progressValue;
+      progressValue += remaining * 0.003;
+      updateProgressUI(progressValue);
+
+      // Update text at thresholds
+      for (let i = lastTextIdx + 1; i < LOADING_TEXTS.length; i++) {
+        if (progressValue >= LOADING_TEXTS[i].at) {
+          loadingText.textContent = LOADING_TEXTS[i].text;
+          lastTextIdx = i;
+        }
       }
+
       progressRAF = requestAnimationFrame(tick);
     }
     progressRAF = requestAnimationFrame(tick);
   }
 
   function stopProgress() {
-    clearInterval(loadingInterval);
     cancelAnimationFrame(progressRAF);
     updateProgressUI(100);
   }
