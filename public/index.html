@@ -21,15 +21,12 @@
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
   <!-- ── Hero / Input View ─────────────────────────────── -->
   <section id="hero" class="hero">
     <div class="hero-content">
-      <div class="hero-logo">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><circle cx="12" cy="4.5" r="2.5"/><path d="M12 7v5"/><path d="M8 21l2.5-7h3L16 21"/><path d="M6 12h12"/></svg>
-      </div>
       <h1>WCAG Accessibility Checker</h1>
       <p class="hero-subtitle">Check any website for WCAG 2.1 AA compliance. Get a detailed report with actionable fix suggestions.</p>
       <form id="scan-form" class="scan-form">
@@ -63,7 +60,7 @@
 
       <!-- Recent scans -->
       <div id="history-section" class="history-section" hidden>
-        <h3>Recent Scans</h3>
+        <h2>Recent Scans</h2>
         <div id="history-list" class="history-list"></div>
       </div>
     </div>
@@ -74,7 +71,7 @@
     <div class="loading-content">
       <div class="progress-ring-wrap">
         <svg class="progress-ring" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="54" fill="none" stroke="#333" stroke-width="8"/>
+          <circle cx="60" cy="60" r="54" fill="none" stroke="#e0e0e0" stroke-width="8"/>
           <circle id="progress-arc" cx="60" cy="60" r="54" fill="none" stroke="#1AAAAA" stroke-width="8"
             stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round"
             transform="rotate(-90 60 60)"/>
@@ -114,7 +111,7 @@
         <div class="score-wrap">
           <div class="score-circle" id="score-circle">
             <svg viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="54" fill="none" stroke="#e0e0e0" stroke-width="10"/>
+              <circle cx="60" cy="60" r="54" fill="none" stroke="#ebebeb" stroke-width="10"/>
               <circle id="score-ring" cx="60" cy="60" r="54" fill="none" stroke="#4caf50" stroke-width="10"
                 stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round"
                 transform="rotate(-90 60 60)"/>

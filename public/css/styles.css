@@ -2,15 +2,15 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --font: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --bg: #111111;
-  --bg-elevated: #1D1D1D;
-  --surface: #252525;
-  --surface-hover: #2e2e2e;
-  --text: #F7F7F7;
-  --text-muted: #9a9a9a;
-  --border: #333333;
-  --border-light: #3d3d3d;
+  --font: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bg: #ffffff;
+  --bg-elevated: #ffffff;
+  --surface: #f5f5f7;
+  --surface-hover: #ededf0;
+  --text: #1a1a1a;
+  --text-muted: #6b6b6b;
+  --border: #e0e0e0;
+  --border-light: #d0d0d0;
   --primary: #1AAAAA;
   --primary-dark: #158d8d;
   --primary-glow: rgba(26, 170, 170, 0.25);
@@ -22,8 +22,8 @@
   --pass: #1AAAAA;
   --radius: 16px;
   --radius-sm: 10px;
-  --shadow: 0 2px 8px rgba(0,0,0,0.3);
-  --shadow-lg: 0 12px 48px rgba(0,0,0,0.5);
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.12);
   --transition: 0.3s cubic-bezier(.216, .62, .356, 1);
 }
 
@@ -59,31 +59,15 @@ body {
   overflow: hidden;
 }
 
-/* Subtle grid background like MoMoney */
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(26, 170, 170, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(26, 170, 170, 0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none;
-}
 
 .hero-content {
-  max-width: 640px;
+  max-width: 800px;
   width: 100%;
   text-align: center;
   position: relative;
   z-index: 1;
 }
 
-.hero-logo {
-  margin-bottom: 20px;
-  opacity: 0.8;
-}
-.hero-logo svg { stroke: var(--primary); }
 
 .hero h1 {
   color: var(--text);
@@ -130,7 +114,7 @@ body {
   background: transparent;
   min-width: 0;
 }
-.input-group input::placeholder { color: #666; }
+.input-group input::placeholder { color: #999; }
 
 .input-group button {
   background: var(--primary);
@@ -186,14 +170,12 @@ body {
   margin-top: 56px;
   text-align: left;
 }
-.history-section h3 {
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 14px;
-  text-align: center;
+.history-section h2 {
+  color: var(--text);
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+  text-align: left;
 }
 .history-list {
   display: flex;
@@ -241,12 +223,12 @@ body {
 }
 .history-date {
   font-size: 11px;
-  color: #666;
+  color: #999;
 }
 .history-clear {
   background: none;
   border: none;
-  color: #555;
+  color: #999;
   font-size: 12px;
   cursor: pointer;
   margin-top: 10px;
@@ -277,7 +259,7 @@ body {
   margin: 0 auto 28px;
 }
 .progress-ring { width: 100%; height: 100%; }
-.progress-ring circle:first-child { stroke: var(--border); }
+.progress-ring circle:first-child { stroke: #e0e0e0; }
 .progress-ring circle:last-child { stroke: var(--primary); }
 .progress-percent {
   position: absolute;
@@ -297,7 +279,7 @@ body {
 }
 
 .loading-url {
-  color: #666;
+  color: #999;
   font-size: 14px;
   word-break: break-all;
   margin-bottom: 28px;
@@ -386,7 +368,7 @@ body {
   background: transparent;
   min-width: 0;
 }
-.topbar-url-input::placeholder { color: #555; }
+.topbar-url-input::placeholder { color: #999; }
 
 .topbar-scan-btn {
   background: var(--primary);
@@ -412,7 +394,7 @@ body {
 
 .scan-time {
   font-size: 12px;
-  color: #666;
+  color: #999;
   white-space: nowrap;
   font-weight: 500;
 }
@@ -497,7 +479,7 @@ body {
   left: 50%;
   transform: translate(-50%, 60%);
   font-size: 12px;
-  color: #666;
+  color: #999;
   font-weight: 600;
 }
 
@@ -525,7 +507,7 @@ body {
 }
 .scanned-date {
   font-size: 12px;
-  color: #666;
+  color: #999;
   font-weight: 500;
 }
 
@@ -715,7 +697,7 @@ body {
 }
 
 .issue-toggle {
-  color: #555;
+  color: #999;
   flex-shrink: 0;
   transition: transform 0.25s cubic-bezier(.216, .62, .356, 1);
   margin-top: 4px;
@@ -747,7 +729,7 @@ body {
 
 .node-count {
   font-size: 12px;
-  color: #666;
+  color: #999;
   font-weight: 600;
   margin-bottom: 8px;
   text-transform: uppercase;
@@ -779,7 +761,7 @@ body {
 
 .node-selector {
   font-size: 11px;
-  color: #666;
+  color: #999;
   font-family: monospace;
   margin-bottom: 6px;
 }
@@ -819,7 +801,7 @@ body {
   padding: 24px;
   text-align: center;
   font-size: 12px;
-  color: #555;
+  color: #999;
   border-top: 1px solid var(--border);
   font-weight: 500;
 }
@@ -866,8 +848,8 @@ body {
 /* ── Scrollbar ────────────────────────────────────── */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #555; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 700px) {
