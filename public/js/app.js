@@ -44,6 +44,8 @@
   let progressValue = 0;
   let progressTarget = 0;
   let progressRAF = null;
+  let reportUnlocked = false;
+  const FREE_ISSUES_SHOWN = 3;
 
   // ── View switching ────────────────────────────────
   function showView(view) {
@@ -436,114 +438,9 @@
         <span class="chip-count">${summary.passes || 0}</span> Passed
       </div>`;
 
-    // CTA banner
-    const ctaWrap = document.createElement("div");
-    ctaWrap.innerHTML = getCTAHTML(data);
-    header.appendChild(ctaWrap);
-
-    // Wire up lead form
-    const leadForm = header.querySelector("#lead-form");
-    if (leadForm) {
-      leadForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const btn = leadForm.querySelector("button");
-        const btnText = btn.textContent;
-        const nameVal = leadForm.querySelector("#lead-name").value.trim();
-        const emailVal = leadForm.querySelector("#lead-email").value.trim();
-        const phoneVal = leadForm.querySelector("#lead-phone").value.trim();
-        btn.disabled = true;
-        btn.textContent = "Sending...";
-        try {
-          await fetch("/api/lead", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: nameVal,
-              email: emailVal,
-              phone: phoneVal,
-              website: data.url,
-              score: data.score,
-              issueCount: data.summary.total,
-              critical: data.summary.critical,
-              serious: data.summary.serious,
-            }),
-          });
-          leadForm.parentElement.innerHTML = `
-            <div class="cta-success-box">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
-              <div>
-                <p class="cta-success-title">Request received!</p>
-                <p class="cta-success-text">We'll review your accessibility report and send you a detailed quote within 24 hours.</p>
-              </div>
-            </div>`;
-        } catch (_) {
-          btn.disabled = false;
-          btn.textContent = btnText;
-        }
-      });
-    }
-
+    reportUnlocked = false;
     renderFilters(data);
     renderIssues(data);
-  }
-
-  function getCTAHTML(data) {
-    let urgencyClass, headline, bullets, ctaButton;
-    const s = data.summary;
-
-    if (data.score < 50) {
-      urgencyClass = "cta-urgent";
-      headline = "Your website has significant accessibility issues";
-      bullets = [
-        `<strong>${s.total} accessibility violations</strong> detected across your site`,
-        s.critical > 0 ? `<strong>${s.critical} critical</strong> issues that may prevent users from accessing content` : null,
-        s.serious > 0 ? `<strong>${s.serious} serious</strong> issues affecting usability for disabled visitors` : null,
-        "Non-compliant websites face <strong>legal risk</strong> under ADA and disability discrimination laws",
-        "We fix all issues for a <strong>flat fee</strong> — no hourly rates, no surprises",
-      ].filter(Boolean);
-      ctaButton = "Get a free fix quote";
-    } else if (data.score < 80) {
-      urgencyClass = "cta-warning";
-      headline = "Your site has accessibility issues that need attention";
-      bullets = [
-        `<strong>${s.total} issues</strong> found — mostly ${s.serious > s.moderate ? "serious" : "moderate"} severity`,
-        "These issues affect how disabled users experience your site",
-        "Fixing them improves SEO, user experience, and legal compliance",
-        "We handle everything — <strong>no disruption to your site</strong>",
-      ];
-      ctaButton = "Get a free fix quote";
-    } else {
-      urgencyClass = "cta-good";
-      headline = "Your site is in good shape — but automated tools only catch 30%";
-      bullets = [
-        `Score: <strong>${data.score}/100</strong> with ${s.total} minor issues`,
-        "Automated scans miss keyboard navigation, screen reader flow, and cognitive issues",
-        "A <strong>manual accessibility audit</strong> gives you full compliance confidence",
-        "We provide a detailed report with prioritised fixes",
-      ];
-      ctaButton = "Get a manual audit quote";
-    }
-
-    return `
-      <div class="cta-banner ${urgencyClass}">
-        <div class="cta-top">
-          <div class="cta-content">
-            <h3 class="cta-headline">${headline}</h3>
-            <ul class="cta-bullets">${bullets.map(b => `<li>${b}</li>`).join("")}</ul>
-          </div>
-        </div>
-        <div class="cta-bottom">
-          <form class="cta-form" id="lead-form">
-            <div class="cta-form-row">
-              <input type="text" id="lead-name" placeholder="Your name" class="cta-input" required>
-              <input type="email" id="lead-email" placeholder="Email address" class="cta-input" required>
-              <input type="tel" id="lead-phone" placeholder="Phone (optional)" class="cta-input cta-input-optional">
-              <button type="submit" class="cta-btn">${ctaButton}</button>
-            </div>
-          </form>
-          <p class="cta-disclaimer">Free, no-obligation quote. We'll review your results and get back within 24 hours.</p>
-        </div>
-      </div>`;
   }
 
   // ── Filters ───────────────────────────────────────
@@ -605,11 +502,27 @@
       return;
     }
 
-    if (groupedView) {
-      renderGroupedIssues(issues, issuesList);
+    let html = "";
+
+    if (reportUnlocked) {
+      // Full report — all issues visible
+      html = issues.map((issue, idx) => issueCardHTML(issue, idx)).join("");
     } else {
-      renderFlatIssues(issues, issuesList);
+      // Gated — show first N issues, then gate + CTA
+      const freeIssues = issues.slice(0, FREE_ISSUES_SHOWN);
+      const lockedCount = issues.length - FREE_ISSUES_SHOWN;
+
+      html = freeIssues.map((issue, idx) => issueCardHTML(issue, idx)).join("");
+
+      if (lockedCount > 0) {
+        html += getGateHTML(data, lockedCount);
+      }
+
+      // Always show the pricing/risk CTA
+      html += getRiskCTAHTML(data);
     }
+
+    issuesList.innerHTML = html;
 
     // Re-apply expand state
     if (allExpanded) {
@@ -622,34 +535,180 @@
         header.closest(".issue-card").classList.toggle("expanded");
       });
     });
-  }
 
-  function renderFlatIssues(issues, container) {
-    container.innerHTML = issues.map((issue, idx) => issueCardHTML(issue, idx)).join("");
-  }
-
-  function renderGroupedIssues(issues, container) {
-    // Group by category
-    const groups = {};
-    issues.forEach((issue) => {
-      const cat = issue.category || "other";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(issue);
-    });
-
-    let html = "";
-    let idx = 0;
-    const sortedCats = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
-
-    sortedCats.forEach((cat) => {
-      const label = CAT_LABELS[cat] || cat;
-      html += `<div class="category-group-header">${label} <span class="category-group-count">${groups[cat].length}</span></div>`;
-      groups[cat].forEach((issue) => {
-        html += issueCardHTML(issue, idx++);
+    // Wire up email gate form
+    const gateForm = issuesList.querySelector("#gate-form");
+    if (gateForm) {
+      gateForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = gateForm.querySelector("button");
+        const emailVal = gateForm.querySelector("#gate-email").value.trim();
+        btn.disabled = true;
+        btn.textContent = "Unlocking...";
+        try {
+          await fetch("/api/lead", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: "",
+              email: emailVal,
+              phone: "",
+              website: data.url,
+              score: data.score,
+              issueCount: data.summary.total,
+              critical: data.summary.critical,
+              serious: data.summary.serious,
+              type: "report_unlock",
+            }),
+          });
+          reportUnlocked = true;
+          renderIssues(data);
+        } catch (_) {
+          btn.disabled = false;
+          btn.textContent = "Unlock full report";
+        }
       });
-    });
+    }
 
-    container.innerHTML = html;
+    // Wire up fix quote form
+    const fixForm = issuesList.querySelector("#fix-form");
+    if (fixForm) {
+      fixForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = fixForm.querySelector("button");
+        const btnText = btn.textContent;
+        const nameVal = fixForm.querySelector("#fix-name").value.trim();
+        const emailVal = fixForm.querySelector("#fix-email").value.trim();
+        const phoneVal = fixForm.querySelector("#fix-phone")?.value.trim() || "";
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+        try {
+          await fetch("/api/lead", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: nameVal,
+              email: emailVal,
+              phone: phoneVal,
+              website: data.url,
+              score: data.score,
+              issueCount: data.summary.total,
+              critical: data.summary.critical,
+              serious: data.summary.serious,
+              type: "fix_quote",
+            }),
+          });
+          fixForm.parentElement.innerHTML = `
+            <div class="cta-success-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+              <div>
+                <p class="cta-success-title">Quote request received!</p>
+                <p class="cta-success-text">We'll review your scan results and send a detailed fixed-price quote within 24 hours.</p>
+              </div>
+            </div>`;
+        } catch (_) {
+          btn.disabled = false;
+          btn.textContent = btnText;
+        }
+      });
+    }
+  }
+
+  // ── Email gate (between free issues and locked issues) ──
+  function getGateHTML(data, lockedCount) {
+    return `
+      <div class="gate-section">
+        <div class="gate-blur">
+          <div class="gate-fake-card"></div>
+          <div class="gate-fake-card"></div>
+          <div class="gate-fake-card"></div>
+        </div>
+        <div class="gate-overlay">
+          <div class="gate-lock">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3 class="gate-title">Your site has ${data.summary.total} accessibility violations</h3>
+          <p class="gate-subtitle">${lockedCount} more issue${lockedCount !== 1 ? "s" : ""} not shown. Enter your email to unlock the full report with every violation and exactly how to fix each one.</p>
+          <form class="gate-form" id="gate-form">
+            <input type="email" id="gate-email" placeholder="Enter your email address" class="gate-input" required>
+            <button type="submit" class="gate-btn">Unlock full report</button>
+          </form>
+          <p class="gate-fine">No spam. Just your report.</p>
+        </div>
+      </div>`;
+  }
+
+  // ── Risk context + pricing CTA ──────────────────────
+  function getRiskCTAHTML(data) {
+    const s = data.summary;
+    const total = s.total;
+
+    // Pricing tier based on violation count
+    let tier, price, tierDesc;
+    if (total <= 15) {
+      tier = "Quick Fix";
+      price = "$499";
+      tierDesc = "Up to 15 violations";
+    } else if (total <= 50) {
+      tier = "Standard";
+      price = "$999";
+      tierDesc = "Up to 50 violations";
+    } else {
+      tier = "Comprehensive";
+      price = "Custom quote";
+      tierDesc = "50+ violations";
+    }
+
+    let urgencyClass;
+    if (data.score < 50) urgencyClass = "cta-urgent";
+    else if (data.score < 80) urgencyClass = "cta-warning";
+    else urgencyClass = "cta-good";
+
+    return `
+      <div class="risk-cta ${urgencyClass}">
+        <div class="risk-cta-left">
+          <h3 class="risk-headline">Don't let accessibility issues become a legal problem</h3>
+          <div class="risk-stats">
+            <div class="risk-stat">
+              <span class="risk-stat-value">4,600+</span>
+              <span class="risk-stat-label">ADA lawsuits filed in 2024</span>
+            </div>
+            <div class="risk-stat">
+              <span class="risk-stat-value">$25,000+</span>
+              <span class="risk-stat-label">Average settlement cost</span>
+            </div>
+            <div class="risk-stat">
+              <span class="risk-stat-value">${total}</span>
+              <span class="risk-stat-label">Violations on your site</span>
+            </div>
+          </div>
+          <ul class="risk-bullets">
+            <li>We fix <strong>every issue</strong> found in your scan — no partial fixes</li>
+            <li><strong>Fixed price</strong> — no hourly rates, no scope creep</li>
+            <li>Done within <strong>5 business days</strong></li>
+            <li>Includes a <strong>re-scan</strong> to verify everything passes</li>
+          </ul>
+        </div>
+        <div class="risk-cta-right">
+          <div class="pricing-card">
+            <div class="pricing-tier">${tier}</div>
+            <div class="pricing-price">${price}</div>
+            <div class="pricing-desc">${tierDesc}</div>
+            <div class="pricing-includes">
+              <div>All ${total} violations fixed</div>
+              <div>Compliance report included</div>
+              <div>30-day support</div>
+            </div>
+          </div>
+          <form class="fix-form" id="fix-form">
+            <input type="text" id="fix-name" placeholder="Your name" class="fix-input" required>
+            <input type="email" id="fix-email" placeholder="Email address" class="fix-input" required>
+            <input type="tel" id="fix-phone" placeholder="Phone (optional)" class="fix-input fix-input-optional">
+            <button type="submit" class="fix-btn">Get your free quote</button>
+          </form>
+          <p class="fix-disclaimer">Free, no-obligation quote within 24 hours</p>
+        </div>
+      </div>`;
   }
 
   function issueCardHTML(issue, idx) {

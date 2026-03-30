@@ -166,7 +166,41 @@ app.post("/api/lead", async (req, res) => {
   leads.push(lead);
   fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
 
-  console.log(`[LEAD] ${lead.name} <${lead.email}> — ${lead.website} — Score: ${lead.score}`);
+  console.log(`[LEAD] ${lead.name} <${lead.email}> — ${lead.website} — Score: ${lead.score} — Type: ${req.body.type || "unknown"}`);
+
+  // Add to Brevo (Sendinblue) if API key is configured
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const brevoRes = await fetch("https://api.brevo.com/v3/contacts", {
+        method: "POST",
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: lead.email,
+          attributes: {
+            FIRSTNAME: lead.name.split(" ")[0] || "",
+            LASTNAME: lead.name.split(" ").slice(1).join(" ") || "",
+            WEBSITE: lead.website,
+            WCAG_SCORE: lead.score,
+            ISSUE_COUNT: lead.issueCount,
+            CRITICAL_COUNT: lead.critical,
+            SERIOUS_COUNT: lead.serious,
+            LEAD_TYPE: req.body.type || "general",
+            PHONE: lead.phone,
+          },
+          listIds: process.env.BREVO_LIST_ID ? [parseInt(process.env.BREVO_LIST_ID)] : [],
+          updateEnabled: true,
+        }),
+      });
+      if (!brevoRes.ok) {
+        console.error("[BREVO] Error:", await brevoRes.text());
+      }
+    } catch (err) {
+      console.error("[BREVO] Failed:", err.message);
+    }
+  }
 
   // Send email notification
   if (process.env.SMTP_USER) {
