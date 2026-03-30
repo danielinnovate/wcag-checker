@@ -121,12 +121,24 @@ app.post("/api/scan", rateLimit, async (req, res) => {
   }
 });
 
-// POST /api/lead — capture contact details
+// POST /api/lead — capture contact details + email notification
 const fs = require("fs");
+const nodemailer = require("nodemailer");
 const LEADS_FILE = path.join(__dirname, "leads.json");
 
-app.post("/api/lead", (req, res) => {
-  const { name, email, website, score, issueCount } = req.body;
+// Email transporter — uses environment variables
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
+  },
+});
+
+app.post("/api/lead", async (req, res) => {
+  const { name, email, phone, website, score, issueCount, critical, serious } = req.body;
 
   if (!email || !email.includes("@")) {
     return res.status(400).json({ success: false, error: "Valid email is required." });
@@ -135,9 +147,12 @@ app.post("/api/lead", (req, res) => {
   const lead = {
     name: name || "",
     email,
+    phone: phone || "",
     website: website || "",
     score: score ?? null,
     issueCount: issueCount ?? null,
+    critical: critical ?? 0,
+    serious: serious ?? 0,
     date: new Date().toISOString(),
   };
 
@@ -152,6 +167,32 @@ app.post("/api/lead", (req, res) => {
   fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
 
   console.log(`[LEAD] ${lead.name} <${lead.email}> — ${lead.website} — Score: ${lead.score}`);
+
+  // Send email notification
+  if (process.env.SMTP_USER) {
+    try {
+      await transporter.sendMail({
+        from: process.env.SMTP_USER,
+        to: "daniel@innovateagency.co.nz",
+        subject: `New WCAG Lead: ${lead.website} (Score: ${lead.score}/100)`,
+        html: `
+          <h2>New Accessibility Lead</h2>
+          <table style="border-collapse:collapse;font-family:sans-serif;">
+            <tr><td style="padding:8px;font-weight:bold;">Name:</td><td style="padding:8px;">${lead.name}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
+            ${lead.phone ? `<tr><td style="padding:8px;font-weight:bold;">Phone:</td><td style="padding:8px;">${lead.phone}</td></tr>` : ""}
+            <tr><td style="padding:8px;font-weight:bold;">Website:</td><td style="padding:8px;"><a href="${lead.website}">${lead.website}</a></td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Score:</td><td style="padding:8px;">${lead.score}/100</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Issues:</td><td style="padding:8px;">${lead.issueCount} total (${lead.critical} critical, ${lead.serious} serious)</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Date:</td><td style="padding:8px;">${new Date(lead.date).toLocaleString()}</td></tr>
+          </table>
+          <p style="margin-top:16px;"><a href="https://wcag.innovateagency.co.nz/#url=${encodeURIComponent(lead.website)}">View their scan results</a></p>
+        `,
+      });
+    } catch (err) {
+      console.error("[EMAIL] Failed to send notification:", err.message);
+    }
+  }
 
   res.json({ success: true });
 });

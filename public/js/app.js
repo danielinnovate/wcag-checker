@@ -447,8 +447,10 @@
       leadForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const btn = leadForm.querySelector("button");
+        const btnText = btn.textContent;
         const nameVal = leadForm.querySelector("#lead-name").value.trim();
         const emailVal = leadForm.querySelector("#lead-email").value.trim();
+        const phoneVal = leadForm.querySelector("#lead-phone").value.trim();
         btn.disabled = true;
         btn.textContent = "Sending...";
         try {
@@ -458,15 +460,25 @@
             body: JSON.stringify({
               name: nameVal,
               email: emailVal,
+              phone: phoneVal,
               website: data.url,
               score: data.score,
               issueCount: data.summary.total,
+              critical: data.summary.critical,
+              serious: data.summary.serious,
             }),
           });
-          leadForm.innerHTML = `<p class="cta-success">Thanks! We'll be in touch shortly.</p>`;
+          leadForm.parentElement.innerHTML = `
+            <div class="cta-success-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+              <div>
+                <p class="cta-success-title">Request received!</p>
+                <p class="cta-success-text">We'll review your accessibility report and send you a detailed quote within 24 hours.</p>
+              </div>
+            </div>`;
         } catch (_) {
           btn.disabled = false;
-          btn.textContent = "Get in touch";
+          btn.textContent = btnText;
         }
       });
     }
@@ -476,29 +488,61 @@
   }
 
   function getCTAHTML(data) {
-    let headline, subtitle;
+    let urgencyClass, headline, bullets, ctaButton;
+    const s = data.summary;
+
     if (data.score < 50) {
-      headline = "Your site needs accessibility work";
-      subtitle = `With a score of ${data.score}/100 and ${data.summary.total} issues found, your site may be at risk of ADA compliance issues. We can fix everything for a flat fee.`;
+      urgencyClass = "cta-urgent";
+      headline = "Your website has significant accessibility issues";
+      bullets = [
+        `<strong>${s.total} accessibility violations</strong> detected across your site`,
+        s.critical > 0 ? `<strong>${s.critical} critical</strong> issues that may prevent users from accessing content` : null,
+        s.serious > 0 ? `<strong>${s.serious} serious</strong> issues affecting usability for disabled visitors` : null,
+        "Non-compliant websites face <strong>legal risk</strong> under ADA and disability discrimination laws",
+        "We fix all issues for a <strong>flat fee</strong> — no hourly rates, no surprises",
+      ].filter(Boolean);
+      ctaButton = "Get a free fix quote";
     } else if (data.score < 80) {
-      headline = "A few issues to address";
-      subtitle = `Your site scored ${data.score}/100 with ${data.summary.total} issues. Let us handle the fixes so you can focus on your business.`;
+      urgencyClass = "cta-warning";
+      headline = "Your site has accessibility issues that need attention";
+      bullets = [
+        `<strong>${s.total} issues</strong> found — mostly ${s.serious > s.moderate ? "serious" : "moderate"} severity`,
+        "These issues affect how disabled users experience your site",
+        "Fixing them improves SEO, user experience, and legal compliance",
+        "We handle everything — <strong>no disruption to your site</strong>",
+      ];
+      ctaButton = "Get a free fix quote";
     } else {
-      headline = "Looking good — want a manual review?";
-      subtitle = `Your site scored ${data.score}/100. Automated scans catch a lot, but a manual accessibility audit catches what tools miss.`;
+      urgencyClass = "cta-good";
+      headline = "Your site is in good shape — but automated tools only catch 30%";
+      bullets = [
+        `Score: <strong>${data.score}/100</strong> with ${s.total} minor issues`,
+        "Automated scans miss keyboard navigation, screen reader flow, and cognitive issues",
+        "A <strong>manual accessibility audit</strong> gives you full compliance confidence",
+        "We provide a detailed report with prioritised fixes",
+      ];
+      ctaButton = "Get a manual audit quote";
     }
 
     return `
-      <div class="cta-banner">
-        <div class="cta-content">
-          <h3 class="cta-headline">${headline}</h3>
-          <p class="cta-subtitle">${subtitle}</p>
+      <div class="cta-banner ${urgencyClass}">
+        <div class="cta-top">
+          <div class="cta-content">
+            <h3 class="cta-headline">${headline}</h3>
+            <ul class="cta-bullets">${bullets.map(b => `<li>${b}</li>`).join("")}</ul>
+          </div>
         </div>
-        <form class="cta-form" id="lead-form">
-          <input type="text" id="lead-name" placeholder="Your name" class="cta-input" required>
-          <input type="email" id="lead-email" placeholder="Your email" class="cta-input" required>
-          <button type="submit" class="cta-btn">Get in touch</button>
-        </form>
+        <div class="cta-bottom">
+          <form class="cta-form" id="lead-form">
+            <div class="cta-form-row">
+              <input type="text" id="lead-name" placeholder="Your name" class="cta-input" required>
+              <input type="email" id="lead-email" placeholder="Email address" class="cta-input" required>
+              <input type="tel" id="lead-phone" placeholder="Phone (optional)" class="cta-input cta-input-optional">
+              <button type="submit" class="cta-btn">${ctaButton}</button>
+            </div>
+          </form>
+          <p class="cta-disclaimer">Free, no-obligation quote. We'll review your results and get back within 24 hours.</p>
+        </div>
       </div>`;
   }
 

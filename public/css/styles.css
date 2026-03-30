@@ -808,90 +808,157 @@ body {
 
 /* ── CTA Banner ──────────────────────────────────── */
 .cta-banner {
-  margin-top: 20px;
-  padding: 24px 28px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  margin-top: 24px;
   border-radius: var(--radius);
-  display: flex;
-  gap: 24px;
-  align-items: center;
+  overflow: hidden;
+  border: 2px solid var(--border);
 }
 
-.cta-content {
-  flex: 1;
-  min-width: 0;
+.cta-urgent { border-color: #ef4444; }
+.cta-warning { border-color: #f97316; }
+.cta-good { border-color: var(--primary); }
+
+.cta-top {
+  padding: 28px 32px;
+  background: var(--surface);
 }
+
+.cta-urgent .cta-top { background: #fef2f2; }
+.cta-warning .cta-top { background: #fff7ed; }
+.cta-good .cta-top { background: #f0fdfa; }
+
+.cta-content { max-width: 100%; }
 
 .cta-headline {
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--text);
-  margin-bottom: 6px;
+  margin-bottom: 14px;
+  line-height: 1.3;
 }
 
-.cta-subtitle {
-  font-size: 13px;
+.cta-urgent .cta-headline { color: #b91c1c; }
+.cta-warning .cta-headline { color: #c2410c; }
+.cta-good .cta-headline { color: #0f766e; }
+
+.cta-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cta-bullets li {
+  font-size: 14px;
   color: var(--text-muted);
-  line-height: 1.6;
-  font-weight: 400;
+  line-height: 1.7;
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: 4px;
 }
 
-.cta-form {
+.cta-bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.cta-urgent .cta-bullets li::before { background: #ef4444; }
+.cta-warning .cta-bullets li::before { background: #f97316; }
+.cta-good .cta-bullets li::before { background: var(--primary); }
+
+.cta-bottom {
+  padding: 24px 32px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.cta-form { width: 100%; }
+
+.cta-form-row {
   display: flex;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 10px;
   align-items: center;
 }
 
 .cta-input {
-  padding: 10px 14px;
+  flex: 1;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: 14px;
   font-family: var(--font);
   font-weight: 500;
   color: var(--text);
-  background: var(--bg);
+  background: var(--surface);
   outline: none;
-  width: 160px;
+  min-width: 0;
   transition: border-color var(--transition);
 }
 .cta-input:focus { border-color: var(--primary); }
 .cta-input::placeholder { color: #999; }
 
 .cta-btn {
-  padding: 10px 20px;
+  padding: 14px 28px;
   background: var(--primary);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   font-family: var(--font);
   cursor: pointer;
   white-space: nowrap;
-  transition: background var(--transition);
+  transition: background var(--transition), transform 0.15s;
+  flex-shrink: 0;
 }
-.cta-btn:hover { background: var(--primary-dark); }
-.cta-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cta-btn:hover { background: var(--primary-dark); transform: scale(1.02); }
+.cta-btn:active { transform: scale(0.98); }
+.cta-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-.cta-success {
-  color: var(--primary);
+.cta-urgent .cta-btn { background: #dc2626; }
+.cta-urgent .cta-btn:hover { background: #b91c1c; }
+.cta-warning .cta-btn { background: #ea580c; }
+.cta-warning .cta-btn:hover { background: #c2410c; }
+
+.cta-disclaimer {
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+  font-weight: 400;
+}
+
+.cta-success-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 0;
+}
+
+.cta-success-title {
+  font-size: 16px;
   font-weight: 700;
-  font-size: 14px;
+  color: #16a34a;
+  margin-bottom: 2px;
+}
+
+.cta-success-text {
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 @media (max-width: 700px) {
-  .cta-banner {
+  .cta-top, .cta-bottom { padding: 20px; }
+  .cta-form-row {
     flex-direction: column;
-    text-align: center;
-  }
-  .cta-form {
-    flex-direction: column;
-    width: 100%;
   }
   .cta-input { width: 100%; }
+  .cta-input-optional { display: none; }
+  .cta-btn { width: 100%; text-align: center; }
 }
 
 /* ── Print / Export ───────────────────────────────── */
