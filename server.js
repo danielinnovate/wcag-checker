@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const { scanUrl } = require("./lib/scanner");
+const { scanUrl, closeBrowser } = require("./lib/scanner");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -103,7 +103,7 @@ app.post("/api/scan", rateLimit, async (req, res) => {
     if (!res.headersSent) {
       res.status(504).json({ success: false, error: "Scan timed out. The page may be too slow or complex.", errorCode: "TIMEOUT" });
     }
-  }, 120000);
+  }, 60000);
 
   try {
     const result = await scanUrl(normalizedUrl);
@@ -123,4 +123,14 @@ app.post("/api/scan", rateLimit, async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`WCAG Checker running at http://localhost:${PORT}`);
+});
+
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+  await closeBrowser();
+  process.exit(0);
+});
+process.on("SIGINT", async () => {
+  await closeBrowser();
+  process.exit(0);
 });
