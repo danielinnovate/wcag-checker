@@ -103,7 +103,7 @@ app.post("/api/scan", rateLimit, async (req, res) => {
     if (!res.headersSent) {
       res.status(504).json({ success: false, error: "Scan timed out. The page may be too slow or complex.", errorCode: "TIMEOUT" });
     }
-  }, 60000);
+  }, 120000);
 
   try {
     const result = await scanUrl(normalizedUrl);

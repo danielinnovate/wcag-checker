@@ -113,10 +113,11 @@
   // ── Progress bar ──────────────────────────────────
   const LOADING_STEPS = [
     { pct: 10, text: "Loading page..." },
-    { pct: 30, text: "Waiting for resources..." },
-    { pct: 55, text: "Running accessibility checks..." },
-    { pct: 75, text: "Analyzing WCAG compliance..." },
-    { pct: 90, text: "Generating report..." },
+    { pct: 25, text: "Waiting for resources..." },
+    { pct: 40, text: "Running accessibility checks..." },
+    { pct: 55, text: "Analyzing WCAG compliance..." },
+    { pct: 70, text: "Generating report..." },
+    { pct: 80, text: "Processing results..." },
   ];
 
   function startProgress() {
@@ -130,7 +131,7 @@
       stepIdx = Math.min(stepIdx + 1, LOADING_STEPS.length - 1);
       progressTarget = LOADING_STEPS[stepIdx].pct;
       loadingText.textContent = LOADING_STEPS[stepIdx].text;
-    }, 3000);
+    }, 5000);
 
     function tick() {
       if (progressValue < progressTarget) {
@@ -191,7 +192,7 @@
     startProgress();
 
     abortController = new AbortController();
-    const timeout = setTimeout(() => abortController.abort(), 65000);
+    const timeout = setTimeout(() => abortController.abort(), 125000);
 
     try {
       const res = await fetch("/api/scan", {
